@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Put inside tangodir/lib/java
+echo Current directory $PWD
+
+
+LIB_DIR=$PWD
+export LIB_DIR
+APP_DIR=$PWD
+export APP_DIR
+
+TANGO_CLASS=$LIB_DIR/JTango-9.0.7.jar
+export TANGO_CLASS
+
+ASTOR_CLASS=$LIB_DIR/Astor-6.7.0.jar
+export ASTOR_CLASS
+JIVE_CLASS=$LIB_DIR/Jive-6.9.jar
+export JIVE_CLASS
+LOGVIEWER=$LIB_DIR/LogViewer-2.0.1.jar
+export LOGVIEWER
+LOG4J=$LIB_DIR/log4j-1.2.15.jar
+export LOG4J
+DEVICETREE=$LIB_DIR/DeviceTree-1.9.6.jar
+
+ATK_CLASS=$LIB_DIR/ATKCore-9.1.13.jar:$LIB_DIR/ATKWidget-9.1.13.jar
+ATK_CLASS=$ATK_CLASS:$APP_DIR/atkpanel-5.4.jar:$APP_DIR/tool_panels-3.2.jar
+export ATK_CLASS
+
+POGO_CLASS=$LIB_DIR/org.tango.pogo-9.2.4.jar
+export POGO_CLASS
+
+dir=$LIB_DIR # this should be tango/lib/java
+dir="$(dirname "$dir")" # this should be tango/lib
+parentdir="$(dirname "$dir")" # this should be tango root
+TEMPLATES=$parentdir/pogo/templates
+export TEMPLATES
+PREF_DIR=$parentdir/pogo/preferences
+export PREF_DIR
+CPP_DOC=$parentdir/doc
+
+PREF_DIR=$TEMPLATES/
+CLASSPATH=$TANGO_CLASS:$ASTOR_CLASS:$JIVE_CLASS:$ATK_CLASS:$LOGVIEWER:$LOG4J:$DEVICETREE:$POGO_CLASS:$PREF_DIR
+export CLASSPATH
+
+
+TANGO_HOST=127.0.0.1:10000
+export TANGO_HOST
+
+case "$1" in
+	1)
+		echo "Launching ASTOR"
+		java -mx128m -DTANGO_HOST=$TANGO_HOST admin.astor.Astor
+		;;
+	2)
+		echo "Launching JIVE"
+		java -mx128m -DTANGO_HOST=$TANGO_HOST jive3.MainPanel 
+		;;
+	3)
+		echo "Launching LogViewer"
+		java -DTANGO_HOST=$TANGO_HOST fr.esrf.logviewer.Main
+		;;
+	4)
+		echo "Launching AtkPanel"
+		java -mx128m -DTANGO_HOST=$TANGO_HOST atkpanel.MainPanel
+	;;
+	5)
+		echo "Launching DeviceTree"
+		java -DTANGO_HOST=$TANGO_HOST explorer.Main
+		;;
+	6)
+		echo "Launcing Pogo"
+		
+		java -DTEMPL_HOME=$TEMPLATES -DCPP_DOC_PATH=$CPP_DOC -Dfile.encoding=ISO-8859-1 pogo.appli.PogoAppli
+		#todo: link CPP_DOC_PATH
+		#java -DTEMPL_HOME=$TEMPLATES -DCPP_DOC_PATH=$CPP_DOC -DIN_LANG=$POGO_LANG \
+		#-DEDITOR=$POGO_EDITOR -Dfile.encoding=ISO-8859-1 pogo.appli.PogoAppli
+		;;
+	7)
+		echo "Launching JDraw"
+		# MANCA LIBPATH
+		java fr.esrf.tangoatk.widget.util.jdraw.JDrawEditorFrame
+		export APPLI_MAIN_CLASS
+		;;
+	8)
+		echo "Launching ADKMonitor"
+		java -DTANGO_HOST=$TANGO_HOST fr.esrf.tangoatk.widget.attribute.Trend
+		;;
+	*)
+		echo "1 for Astor"
+		echo "2 for Jive"
+		echo "3 for LogViewer"
+		echo "4 for AtkPanel"
+		echo "5 for DeviceTree"
+		echo "6 for Pogo"
+		echo "7 for JDraw"
+		echo "8 for ADKMonitor"
+	;;
+esac

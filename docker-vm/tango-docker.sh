@@ -1,4 +1,8 @@
 #!/bin/bash
+# Get ip
+LOCALIP=$(ip route get 1 | awk '{print $NF;exit}')
+
+echo "LOCAL IP address " $LOCALIP
 if [ $# == 2 ]
     then
 	mysql_port=$1
@@ -6,10 +10,11 @@ if [ $# == 2 ]
 	tango_port=$2
 	echo "TANGO PORT $2"
 else
-    echo "Starting MYSQL on localhost on Standard Port 3306"
-    echo "Starting Tango on localhost on Standard Port 10000"
+    echo "MYSQL Standard Port 3306"
+    echo "Tango Standard Port 10000"
     echo "Usage:"
     echo "tango-docker.sh MYSQLPORT TANGO_PORT"
+    exit
 fi
 
 if [[ "$(docker images -q tango-db 2> /dev/null)" == "" ]]; then
@@ -22,11 +27,11 @@ if [[ "$(docker images -q tango-db 2> /dev/null)" == "" ]]; then
 fi
     echo "tango-db image exists"
 
-if [[ "$(docker images -q tango_databaseds 2> /dev/null)" == "" ]]; then
+if [[ "$(docker images -q tango-core 2> /dev/null)" == "" ]]; then
     # if the image doesn't exists
     echo "tango image doesn't exists"
     git clone https://github.com/tango-controls/tango-cs-docker.git
-    docker build -t tango_databaseds ./tango-cs-docker/
+    docker build -t tango-core ./tango-cs-docker/
 fi
     echo "tango image exists"
 
@@ -37,11 +42,11 @@ if [[ $? -eq 0 ]]
     docker restart tango-db
 fi
 
-# tango_databaseds è il nome del container che vado a creare, MYSQL_HOST punta al database MySQL e l'ultimo tango è l'immagina docker
-docker run -d --name tango_databaseds -p 10000:10000 -e ORB_PORT=10000 -e TANGO_HOST=localhost:10000 -e MYSQL_HOST=localhost:13306 -e MYSQL_USER=tango -e MYSQL_PASSWORD=tango -e MYSQL_DATABASE=tango tango_databaseds 2>&1 | grep 'Conflict. The name'
+# tango-core è il nome del container che vado a creare, MYSQL_HOST punta al database MySQL e l'ultimo tango è l'immagina docker
+docker run -d --name tango-core -p 10000:10000 -e ORB_PORT=10000 -e TANGO_HOST=$LOCALIP:10000 -e MYSQL_HOST=$LOCALIP:13306 -e MYSQL_USER=tango -e MYSQL_PASSWORD=tango -e MYSQL_DATABASE=tango tango-core 2>&1 | grep 'Conflict. The name'
 if [[ $? -eq 0 ]]
 then
-    echo "Container tango_databaseds already exists, restarting..."
-    docker restart tango_databaseds
+    echo "Container tango-core already exists, restarting..."
+    docker restart tango-core
 fi
 
